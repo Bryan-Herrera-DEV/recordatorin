@@ -6,7 +6,7 @@ const normalizeHex = (value: string): string | null => {
   const trimmed = value.trim()
   const shortMatch = /^#([\da-f]{3})$/i.exec(trimmed)
   if (shortMatch?.[1]) {
-    return `#${shortMatch[1].split('').map((part) => `${part}${part}`).join('')}`.toLowerCase()
+    return `#${shortMatch[1].split('').map((part) => part + part).join('')}`.toLowerCase()
   }
 
   const longMatch = /^#([\da-f]{6})/i.exec(trimmed)
