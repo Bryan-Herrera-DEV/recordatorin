@@ -40,10 +40,7 @@ const createAppIcon = (): Electron.NativeImage =>
   )
 
 const getRepository = (): SnapshotRepository => {
-  if (repository === null) {
-    repository = new SnapshotRepository(join(app.getPath('userData'), 'recordatorin.sqlite'))
-  }
-
+  repository ??= new SnapshotRepository(join(app.getPath('userData'), 'recordatorin.sqlite'))
   return repository
 }
 
