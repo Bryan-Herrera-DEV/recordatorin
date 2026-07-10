@@ -1,7 +1,7 @@
 import type { HTMLAttributes } from 'react'
 import { cn } from '@/shared/lib/cn'
 
-export type BadgeProps = HTMLAttributes<HTMLSpanElement>
+export type BadgeProps = Readonly<HTMLAttributes<HTMLSpanElement>>
 
 export function Badge({ className, ...props }: BadgeProps) {
   return (
