@@ -1,7 +1,7 @@
 {
   "name": "recordatorin",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Local-first notes and reminders app built with Electron, React, Tailwind and TypeScript.",
   "type": "module",
   "main": "./out/main/index.js",
