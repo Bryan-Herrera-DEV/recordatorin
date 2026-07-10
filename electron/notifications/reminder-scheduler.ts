@@ -180,7 +180,7 @@ export class ReminderScheduler {
     }
 
     const reminder = snapshot.reminders.find((item) => item.id === reminderId)
-    if (reminder === undefined || reminder.status !== 'active') {
+    if (reminder?.status !== 'active') {
       return
     }
 
