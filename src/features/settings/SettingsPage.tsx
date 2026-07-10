@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Trash2 } from 'lucide-react'
 import type { Locale, SoundPack, ThemeColors, ThemeConfig, ThemeDensity } from '@/features/settings/domain/settings'
 import { themePresets, updateThemeTimestamp } from '@/features/settings/domain/settings'
+import type { Folder as WorkspaceFolder } from '@/features/workspace/domain/workspace'
 import { createFolderColorPalette } from '@/features/workspace/domain/folder-colors'
 import { FolderColorPicker } from '@/features/workspace/components/FolderColorPicker'
 import { useAppStore } from '@/app/store/app-store'
@@ -50,6 +52,7 @@ export function SettingsPage() {
   const updateSettings = useAppStore((state) => state.updateSettings)
   const updateTheme = useAppStore((state) => state.updateTheme)
   const addFolder = useAppStore((state) => state.addFolder)
+  const deleteFolder = useAppStore((state) => state.deleteFolder)
   const addTag = useAppStore((state) => state.addTag)
   const theme = snapshot.settings.theme
   const folderColorPalette = createFolderColorPalette(theme.colors)
@@ -122,6 +125,14 @@ export function SettingsPage() {
     void updateSettings({
       customThemes: snapshot.settings.customThemes.filter((customTheme) => customTheme.id !== themeId),
     })
+  }
+
+  const handleDeleteFolder = (folder: WorkspaceFolder): void => {
+    const notes = snapshot.notes.filter((note) => note.folderId === folder.id).length
+    const reminders = snapshot.reminders.filter((reminder) => reminder.folderId === folder.id).length
+    if (window.confirm(t('deleteFolderConfirm', { name: folder.name, notes, reminders }))) {
+      void deleteFolder(folder.id)
+    }
   }
 
   return (
@@ -369,8 +380,11 @@ export function SettingsPage() {
         <ScrollArea className="max-h-56 space-y-2 pr-1">
           {snapshot.folders.map((folder) => (
             <div key={folder.id} className="mb-2 flex items-center gap-2 rounded-2xl bg-white/20 px-3 py-2 text-sm last:mb-0">
-              <span className="size-3 rounded-full" style={{ backgroundColor: folder.color }} />
-              {folder.name}
+              <span className="size-3 shrink-0 rounded-full" style={{ backgroundColor: folder.color }} />
+              <span className="min-w-0 flex-1 truncate">{folder.name}</span>
+              <Button type="button" variant="destructive" size="icon" className="size-8" onClick={() => handleDeleteFolder(folder)} aria-label={t('deleteFolder')}>
+                <Trash2 className="size-3.5" />
+              </Button>
             </div>
           ))}
         </ScrollArea>

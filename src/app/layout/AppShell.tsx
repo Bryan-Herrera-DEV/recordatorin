@@ -1,8 +1,9 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { Bell, Folder, Hash, MoonStar, NotebookPen, Plus, Settings } from 'lucide-react'
+import { Bell, Folder as FolderIcon, Hash, MoonStar, NotebookPen, Plus, Settings, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
+import type { Folder as WorkspaceFolder } from '@/features/workspace/domain/workspace'
 import { createFolderColorPalette } from '@/features/workspace/domain/folder-colors'
 import { FolderColorPicker } from '@/features/workspace/components/FolderColorPicker'
 import { useAppStore } from '@/app/store/app-store'
@@ -21,6 +22,7 @@ export function AppShell() {
   const { t } = useTranslation()
   const snapshot = useAppStore((state) => state.snapshot)
   const addFolder = useAppStore((state) => state.addFolder)
+  const deleteFolder = useAppStore((state) => state.deleteFolder)
   const addTag = useAppStore((state) => state.addTag)
   const folderColorPalette = createFolderColorPalette(snapshot.settings.theme.colors)
   const [addingFolder, setAddingFolder] = useState(false)
@@ -41,6 +43,14 @@ export function AppShell() {
     const label = window.prompt(t('tagPrompt'))
     if (label !== null && label.trim().length > 0) {
       void addTag(label)
+    }
+  }
+
+  const handleDeleteFolder = (folder: WorkspaceFolder): void => {
+    const notes = snapshot.notes.filter((note) => note.folderId === folder.id).length
+    const reminders = snapshot.reminders.filter((reminder) => reminder.folderId === folder.id).length
+    if (window.confirm(t('deleteFolderConfirm', { name: folder.name, notes, reminders }))) {
+      void deleteFolder(folder.id)
     }
   }
 
@@ -99,9 +109,12 @@ export function AppShell() {
           ) : null}
           <div className="space-y-1">
             {snapshot.folders.map((folder) => (
-              <div key={folder.id} className="flex items-center gap-2 rounded-2xl px-2 py-1.5 text-sm">
-                <Folder className="size-4" style={{ color: folder.color }} />
-                <span className="truncate">{folder.name}</span>
+              <div key={folder.id} className="flex items-center gap-2 rounded-2xl px-2 py-1.5 text-sm hover:bg-white/15">
+                <FolderIcon className="size-4 shrink-0" style={{ color: folder.color }} />
+                <span className="min-w-0 flex-1 truncate">{folder.name}</span>
+                <Button type="button" variant="ghost" size="icon" className="size-7" onClick={() => handleDeleteFolder(folder)} aria-label={t('deleteFolder')}>
+                  <Trash2 className="size-3.5" />
+                </Button>
               </div>
             ))}
           </div>

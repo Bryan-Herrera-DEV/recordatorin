@@ -9,10 +9,14 @@
     "dev": "electron-vite dev",
     "build": "tsc -b && electron-vite build",
     "dist": "npm run build && electron-builder",
+    "dist:win": "npm run build && electron-builder --win --publish never",
     "lint": "oxlint .",
     "preview": "electron-vite preview",
     "rebuild:native": "electron-rebuild -f -w better-sqlite3",
-    "typecheck": "tsc -b --pretty false"
+    "typecheck": "tsc -b --pretty false",
+    "version:major": "npm version major --no-git-tag-version",
+    "version:minor": "npm version minor --no-git-tag-version",
+    "version:patch": "npm version patch --no-git-tag-version"
   },
   "dependencies": {
     "@excalidraw/excalidraw": "^0.18.1",
@@ -58,6 +62,7 @@
     "directories": {
       "output": "release"
     },
+    "artifactName": "Recordatorin-${version}-${os}-${arch}.${ext}",
     "files": [
       "out/**/*",
       "package.json"

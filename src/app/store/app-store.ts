@@ -37,6 +37,7 @@ type AppStore = {
   readonly setSelectedReminderId: (id: ReminderId | null) => void
   readonly setNoteFilters: (filters: Partial<NoteFilters>) => void
   readonly addFolder: (name: string, color?: string) => Promise<void>
+  readonly deleteFolder: (id: FolderId) => Promise<void>
   readonly addTag: (label: string) => Promise<void>
   readonly createNote: () => Promise<void>
   readonly updateNote: (id: NoteId, patch: NotePatch) => Promise<void>
@@ -151,6 +152,26 @@ export const useAppStore = create<AppStore>((set, get) => ({
       folders: [...snapshot.folders, createFolder(name, color)],
     })
     set({ snapshot: nextSnapshot })
+    await persistSnapshot(nextSnapshot)
+  },
+  deleteFolder: async (id: FolderId) => {
+    const snapshot = get().snapshot
+    const folders = snapshot.folders.filter((folder) => folder.id !== id)
+    const notes = snapshot.notes.filter((note) => note.folderId !== id)
+    const reminders = snapshot.reminders.filter((reminder) => reminder.folderId !== id)
+    const selectedNoteId = notes.some((note) => note.id === get().selectedNoteId) ? get().selectedNoteId : notes[0]?.id ?? null
+    const selectedReminderId = reminders.some((reminder) => reminder.id === get().selectedReminderId)
+      ? get().selectedReminderId
+      : reminders[0]?.id ?? null
+    const noteFilters = get().noteFilters.folderId === id ? { ...get().noteFilters, folderId: 'all' as const } : get().noteFilters
+    const nextSnapshot = touchSnapshot({
+      ...snapshot,
+      folders,
+      notes,
+      reminders,
+    })
+
+    set({ noteFilters, selectedNoteId, selectedReminderId, snapshot: nextSnapshot })
     await persistSnapshot(nextSnapshot)
   },
   addTag: async (label: string) => {

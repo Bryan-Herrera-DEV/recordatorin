@@ -93,6 +93,9 @@ export const resources = {
       add: 'Agregar',
       cancel: 'Cancelar',
       delete: 'Eliminar',
+      deleteFolder: 'Eliminar carpeta',
+      deleteFolderConfirm:
+        'Esto eliminará la carpeta "{{name}}" y TODO lo que contiene: {{notes}} notas y {{reminders}} recordatorios. Esta acción no se puede deshacer.',
       folderColor: 'Color de carpeta',
       folderPrompt: 'Nombre de la carpeta',
       tagPrompt: 'Nombre del tag',
@@ -190,6 +193,9 @@ export const resources = {
       add: 'Add',
       cancel: 'Cancel',
       delete: 'Delete',
+      deleteFolder: 'Delete folder',
+      deleteFolderConfirm:
+        'This will delete folder "{{name}}" and EVERYTHING inside it: {{notes}} notes and {{reminders}} reminders. This cannot be undone.',
       folderColor: 'Folder color',
       folderPrompt: 'Folder name',
       tagPrompt: 'Tag name',
