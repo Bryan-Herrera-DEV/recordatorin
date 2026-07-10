@@ -21,6 +21,7 @@
     "sonar:up": "docker compose -f docker-compose.sonar.yml up -d",
     "sonar:down": "docker compose -f docker-compose.sonar.yml down",
     "sonar:scan": "node scripts/run-sonar-local.mjs",
+    "sonar:issues": "node scripts/export-sonar-issues.mjs",
     "setup:hooks": "node scripts/setup-git-hooks.mjs",
     "typecheck": "tsc -b --pretty false",
     "version:major": "npm version major --no-git-tag-version",

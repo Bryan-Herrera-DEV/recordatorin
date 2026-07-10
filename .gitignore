@@ -14,6 +14,11 @@ out
 release
 build
 *.local
+.env
+.env.*
+!.env.example
+sonar-issues*.json
+sonar-issues*.md
 
 # Editor directories and files
 .vscode/*
