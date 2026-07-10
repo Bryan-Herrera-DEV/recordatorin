@@ -138,18 +138,18 @@ const registerIpc = (): void => {
 
 app.setAppUserModelId('com.recordatorin.desktop')
 
-app.whenReady().then(() => {
-  const repo = getRepository()
-  mainWindow = createMainWindow()
-  scheduler = new ReminderScheduler(repo, () => mainWindow)
-  createTray()
-  registerIpc()
+await app.whenReady()
 
-  const snapshot = repo.load()
-  if (snapshot !== null) {
-    scheduler.schedule(snapshot, snapshot.settings.sounds)
-  }
-})
+const repo = getRepository()
+mainWindow = createMainWindow()
+scheduler = new ReminderScheduler(repo, () => mainWindow)
+createTray()
+registerIpc()
+
+const snapshot = repo.load()
+if (snapshot !== null) {
+  scheduler.schedule(snapshot, snapshot.settings.sounds)
+}
 
 app.on('before-quit', () => {
   isQuitting = true
