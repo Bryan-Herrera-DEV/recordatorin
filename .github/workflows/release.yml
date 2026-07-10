@@ -60,10 +60,22 @@ jobs:
       - name: Push version commit and tag
         run: git push origin HEAD:${{ github.ref_name }} --follow-tags
 
-  release-dispatch:
+  build-dispatch:
     if: github.event_name == 'workflow_dispatch'
     needs: create-version
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows
+            build-script: npm run dist:win
+            artifact-path: release/*.exe
+          - os: ubuntu-latest
+            platform: linux
+            build-script: npm run dist:linux
+            artifact-path: release/*.AppImage
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout release tag
         uses: actions/checkout@v4
@@ -76,6 +88,10 @@ jobs:
           node-version: 24
           cache: npm
 
+      - name: Install Linux packaging dependencies
+        if: matrix.platform == 'linux'
+        run: sudo apt-get update && sudo apt-get install -y libarchive-tools
+
       - name: Install dependencies
         run: npm ci
 
@@ -85,14 +101,34 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Build Windows installer
-        run: npm run dist:win
+      - name: Audit
+        run: npm run audit
 
-      - name: Upload build artifact
+      - name: Build ${{ matrix.platform }} installer
+        run: ${{ matrix.build-script }}
+        env:
+          CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
+
+      - name: Upload ${{ matrix.platform }} artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Recordatorin-${{ needs.create-version.outputs.version }}-windows
-          path: release/*.exe
+          name: Recordatorin-${{ needs.create-version.outputs.version }}-${{ matrix.platform }}
+          path: ${{ matrix.artifact-path }}
+          if-no-files-found: error
+
+  publish-dispatch:
+    if: github.event_name == 'workflow_dispatch'
+    needs:
+      - create-version
+      - build-dispatch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+          merge-multiple: true
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
@@ -100,13 +136,25 @@ jobs:
           tag_name: ${{ needs.create-version.outputs.tag }}
           name: Recordatorin ${{ needs.create-version.outputs.tag }}
           generate_release_notes: true
-          files: release/*.exe
+          files: release-artifacts/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  release-tag:
+  build-tag:
     if: github.event_name == 'push'
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows
+            build-script: npm run dist:win
+            artifact-path: release/*.exe
+          - os: ubuntu-latest
+            platform: linux
+            build-script: npm run dist:linux
+            artifact-path: release/*.AppImage
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout tag
         uses: actions/checkout@v4
@@ -117,6 +165,10 @@ jobs:
           node-version: 24
           cache: npm
 
+      - name: Install Linux packaging dependencies
+        if: matrix.platform == 'linux'
+        run: sudo apt-get update && sudo apt-get install -y libarchive-tools
+
       - name: Install dependencies
         run: npm ci
 
@@ -126,14 +178,32 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Build Windows installer
-        run: npm run dist:win
+      - name: Audit
+        run: npm run audit
 
-      - name: Upload build artifact
+      - name: Build ${{ matrix.platform }} installer
+        run: ${{ matrix.build-script }}
+        env:
+          CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
+
+      - name: Upload ${{ matrix.platform }} artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Recordatorin-${{ github.ref_name }}-windows
-          path: release/*.exe
+          name: Recordatorin-${{ github.ref_name }}-${{ matrix.platform }}
+          path: ${{ matrix.artifact-path }}
+          if-no-files-found: error
+
+  publish-tag:
+    if: github.event_name == 'push'
+    needs: build-tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+          merge-multiple: true
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
@@ -141,6 +211,6 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: Recordatorin ${{ github.ref_name }}
           generate_release_notes: true
-          files: release/*.exe
+          files: release-artifacts/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -7,12 +7,21 @@
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
+    "prebuild": "node scripts/generate-icons.mjs",
     "build": "tsc -b && electron-vite build",
     "dist": "npm run build && electron-builder",
     "dist:win": "npm run build && electron-builder --win --publish never",
+    "dist:linux": "npm run build && electron-builder --linux --publish never",
     "lint": "oxlint .",
     "preview": "electron-vite preview",
     "rebuild:native": "electron-rebuild -f -w better-sqlite3",
+    "audit": "npm audit --audit-level=high",
+    "validate": "npm run typecheck && npm run lint && npm run audit",
+    "validate:prepush": "npm run validate && npm run sonar:scan",
+    "sonar:up": "docker compose -f docker-compose.sonar.yml up -d",
+    "sonar:down": "docker compose -f docker-compose.sonar.yml down",
+    "sonar:scan": "node scripts/run-sonar-local.mjs",
+    "setup:hooks": "node scripts/setup-git-hooks.mjs",
     "typecheck": "tsc -b --pretty false",
     "version:major": "npm version major --no-git-tag-version",
     "version:minor": "npm version minor --no-git-tag-version",
@@ -62,6 +71,7 @@
     "directories": {
       "output": "release"
     },
+    "icon": "build/icon",
     "artifactName": "Recordatorin-${version}-${os}-${arch}.${ext}",
     "files": [
       "out/**/*",
@@ -71,13 +81,21 @@
       "**/*.node"
     ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico"
     },
     "mac": {
       "target": "dmg"
     },
     "linux": {
-      "target": "AppImage"
+      "target": "AppImage",
+      "icon": "build/icon.png",
+      "category": "Utility"
     }
   },
   "overrides": {
