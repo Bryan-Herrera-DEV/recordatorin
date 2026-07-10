@@ -1,6 +1,7 @@
 import { Check, ChevronDown } from 'lucide-react'
-import { Children, isValidElement, useEffect, useId, useRef, useState } from 'react'
-import type { ChangeEvent, KeyboardEvent, ReactNode, SelectHTMLAttributes } from 'react'
+import { Children, isValidElement, useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import type { CSSProperties, ChangeEvent, KeyboardEvent, ReactNode, SelectHTMLAttributes } from 'react'
+import { createPortal } from 'react-dom'
 import { cn } from '@/shared/lib/cn'
 
 export type SelectProps = SelectHTMLAttributes<HTMLSelectElement>
@@ -10,6 +11,19 @@ type SelectOption = {
   readonly label: string
   readonly disabled: boolean
 }
+
+type MenuPosition = {
+  readonly bottom?: number
+  readonly left: number
+  readonly maxHeight: number
+  readonly placement: 'bottom' | 'top'
+  readonly top?: number
+  readonly width: number
+}
+
+const menuGap = 8
+const viewportMargin = 8
+const menuZIndex = 2_147_483_647
 
 const optionText = (value: ReactNode): string => {
   if (typeof value === 'string' || typeof value === 'number') {
@@ -49,9 +63,59 @@ export function Select({ className, children, disabled, onChange, value, default
   const options = readOptions(children)
   const [open, setOpen] = useState(false)
   const [internalValue, setInternalValue] = useState(() => String(defaultValue ?? options[0]?.value ?? ''))
+  const [menuPosition, setMenuPosition] = useState<MenuPosition | null>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
   const rootRef = useRef<HTMLDivElement>(null)
   const selectedValue = value === undefined ? internalValue : String(value)
   const selectedOption = options.find((option) => option.value === selectedValue) ?? options[0]
+
+  const calculateMenuPosition = useCallback((): MenuPosition | null => {
+    const trigger = buttonRef.current
+    if (trigger === null || typeof window === 'undefined') {
+      return null
+    }
+
+    const rect = trigger.getBoundingClientRect()
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+    const desiredHeight = Math.min(256, Math.max(48, options.length * 38 + 8))
+    const availableBelow = viewportHeight - rect.bottom - viewportMargin - menuGap
+    const availableAbove = rect.top - viewportMargin - menuGap
+    const placement: MenuPosition['placement'] = desiredHeight > availableBelow && availableAbove > availableBelow ? 'top' : 'bottom'
+    const availableHeight = placement === 'top' ? availableAbove : availableBelow
+    const maxHeight = Math.max(48, Math.min(desiredHeight, availableHeight))
+    const width = Math.min(Math.max(rect.width, 160), Math.max(160, viewportWidth - viewportMargin * 2))
+    const left = Math.min(Math.max(rect.left, viewportMargin), Math.max(viewportMargin, viewportWidth - width - viewportMargin))
+
+    if (placement === 'top') {
+      return {
+        bottom: viewportHeight - rect.top + menuGap,
+        left,
+        maxHeight,
+        placement,
+        width,
+      }
+    }
+
+    return {
+      left,
+      maxHeight,
+      placement,
+      top: rect.bottom + menuGap,
+      width,
+    }
+  }, [options.length])
+
+  const toggleOpen = (): void => {
+    if (open) {
+      setOpen(false)
+      return
+    }
+
+    setMenuPosition(calculateMenuPosition())
+    setOpen(true)
+  }
 
   useEffect(() => {
     if (!open) {
@@ -59,14 +123,36 @@ export function Select({ className, children, disabled, onChange, value, default
     }
 
     const closeOnOutsideClick = (event: PointerEvent): void => {
-      if (rootRef.current !== null && !rootRef.current.contains(event.target as Node)) {
-        setOpen(false)
+      const target = event.target as Node
+      if (rootRef.current?.contains(target) === true || menuRef.current?.contains(target) === true) {
+        return
       }
+
+      setOpen(false)
     }
 
     document.addEventListener('pointerdown', closeOnOutsideClick)
     return () => document.removeEventListener('pointerdown', closeOnOutsideClick)
   }, [open])
+
+  useLayoutEffect(() => {
+    if (!open) {
+      return undefined
+    }
+
+    const updatePosition = (): void => {
+      setMenuPosition(calculateMenuPosition())
+    }
+
+    updatePosition()
+    window.addEventListener('resize', updatePosition)
+    window.addEventListener('scroll', updatePosition, true)
+
+    return () => {
+      window.removeEventListener('resize', updatePosition)
+      window.removeEventListener('scroll', updatePosition, true)
+    }
+  }, [calculateMenuPosition, open])
 
   const chooseOption = (nextValue: string): void => {
     if (value === undefined) {
@@ -88,9 +174,19 @@ export function Select({ className, children, disabled, onChange, value, default
 
     if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
       event.preventDefault()
-      setOpen((current) => !current)
+      toggleOpen()
     }
   }
+
+  const menuStyle: CSSProperties | undefined = menuPosition === null
+    ? undefined
+    : {
+        bottom: menuPosition.bottom,
+        left: menuPosition.left,
+        top: menuPosition.top,
+        width: menuPosition.width,
+        zIndex: menuZIndex,
+      }
 
   return (
     <div ref={rootRef} className={cn('relative w-full min-w-0', className)}>
@@ -107,6 +203,7 @@ export function Select({ className, children, disabled, onChange, value, default
       </select>
 
       <button
+        ref={buttonRef}
         id={selectId}
         type="button"
         role="combobox"
@@ -115,16 +212,20 @@ export function Select({ className, children, disabled, onChange, value, default
         aria-disabled={disabled}
         disabled={disabled}
         className="flex min-h-10 w-full min-w-0 items-center justify-between gap-2 rounded-[calc(var(--radius)-8px)] border border-[var(--border)] bg-[color-mix(in_srgb,var(--card)_72%,transparent)] px-3 py-2 text-left text-sm text-[var(--foreground)] shadow-sm outline-none transition hover:bg-[color-mix(in_srgb,var(--card)_88%,transparent)] focus:border-[var(--ring)] focus:ring-2 focus:ring-[var(--ring)]/30 disabled:cursor-not-allowed disabled:opacity-50"
-        onClick={() => setOpen((current) => !current)}
+        onClick={toggleOpen}
         onKeyDown={handleKeyDown}
       >
         <span className="truncate">{selectedOption?.label ?? ''}</span>
         <ChevronDown className={cn('size-4 shrink-0 opacity-60 transition', open ? 'rotate-180' : '')} />
       </button>
 
-      {open ? (
-        <div className="absolute z-50 mt-2 w-full min-w-40 overflow-hidden rounded-[calc(var(--radius)-8px)] border border-[var(--border)] bg-[color-mix(in_srgb,var(--card)_94%,transparent)] p-1 text-[var(--card-foreground)] shadow-2xl shadow-black/15 backdrop-blur-xl">
-          <div id={`${selectId}-listbox`} role="listbox" className="shadcn-scrollbar max-h-64 overflow-y-auto">
+      {open && menuPosition !== null ? createPortal(
+        <div
+          ref={menuRef}
+          className="fixed min-w-40 overflow-hidden rounded-[calc(var(--radius)-8px)] border border-[var(--border)] bg-[color-mix(in_srgb,var(--card)_94%,transparent)] p-1 text-[var(--card-foreground)] shadow-2xl shadow-black/15 backdrop-blur-xl"
+          style={menuStyle}
+        >
+          <div id={`${selectId}-listbox`} role="listbox" className="shadcn-scrollbar overflow-y-auto" style={{ maxHeight: menuPosition.maxHeight }}>
             {options.map((option) => (
               <button
                 key={option.value}
@@ -143,7 +244,8 @@ export function Select({ className, children, disabled, onChange, value, default
               </button>
             ))}
           </div>
-        </div>
+        </div>,
+        document.body,
       ) : null}
     </div>
   )
