@@ -81,14 +81,15 @@ export const useAppStore = create<AppStore>((set, get) => ({
     await persistSnapshot(snapshot)
   },
   applyExternalSnapshot: (snapshot: AppSnapshot) => {
+    const nextSnapshot = ensureSnapshot(snapshot, get().snapshot.settings.locale)
     set({
-      snapshot,
-      selectedNoteId: snapshot.notes.some((note) => note.id === get().selectedNoteId)
+      snapshot: nextSnapshot,
+      selectedNoteId: nextSnapshot.notes.some((note) => note.id === get().selectedNoteId)
         ? get().selectedNoteId
-        : snapshot.notes[0]?.id ?? null,
-      selectedReminderId: snapshot.reminders.some((reminder) => reminder.id === get().selectedReminderId)
+        : nextSnapshot.notes[0]?.id ?? null,
+      selectedReminderId: nextSnapshot.reminders.some((reminder) => reminder.id === get().selectedReminderId)
         ? get().selectedReminderId
-        : snapshot.reminders[0]?.id ?? null,
+        : nextSnapshot.reminders[0]?.id ?? null,
     })
   },
   completeOnboarding: async (userName: string, locale: Locale) => {

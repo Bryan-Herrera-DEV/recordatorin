@@ -27,9 +27,7 @@ export function OnboardingPage() {
   return (
     <div className="grid min-h-screen place-items-center p-5">
       <Card className="w-full max-w-2xl p-8 text-center">
-        <div className="mx-auto mb-6 grid size-16 place-items-center rounded-3xl bg-[var(--primary)] text-3xl font-bold text-[var(--primary-foreground)] shadow-xl shadow-black/10">
-          R
-        </div>
+        <img src="/favicon.svg" alt="Recordatorin" className="mx-auto mb-6 size-16 rounded-3xl shadow-xl shadow-black/10" />
         <h1 className="text-4xl font-bold tracking-tight text-[var(--foreground)]">{t('onboardingTitle')}</h1>
         <p className="mx-auto mt-3 max-w-xl text-sm leading-6 opacity-75">{t('onboardingSubtitle')}</p>
 

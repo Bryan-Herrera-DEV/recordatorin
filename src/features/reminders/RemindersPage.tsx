@@ -9,6 +9,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
 import { EmptyState } from '@/shared/ui/empty-state'
+import { HelpHint } from '@/shared/ui/help-hint'
 import { Input } from '@/shared/ui/input'
 import { Select } from '@/shared/ui/select'
 
@@ -59,6 +60,15 @@ const scheduleForType = (current: ReminderSchedule, type: ReminderSchedule['type
   }
 }
 
+function FieldLabel({ help, label }: { readonly help: string; readonly label: string }) {
+  return (
+    <span className="flex min-w-0 items-center gap-1.5">
+      <span className="truncate">{label}</span>
+      <HelpHint label={`${label} help`}>{help}</HelpHint>
+    </span>
+  )
+}
+
 function ReminderEditor({ reminder }: { readonly reminder: Reminder }) {
   const { t } = useTranslation()
   const snapshot = useAppStore((state) => state.snapshot)
@@ -70,7 +80,7 @@ function ReminderEditor({ reminder }: { readonly reminder: Reminder }) {
   }
 
   return (
-    <Card className="min-h-0 overflow-y-auto p-5">
+    <Card className="shadcn-scrollbar min-h-0 overflow-y-auto p-5">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0 flex-1 space-y-3">
           <Input
@@ -90,7 +100,7 @@ function ReminderEditor({ reminder }: { readonly reminder: Reminder }) {
 
       <div className="mt-5 grid gap-3 md:grid-cols-3">
         <label className="grid gap-2 text-sm font-medium">
-          {t('status')}
+          <FieldLabel label={t('status')} help={t('statusHelp')} />
           <Select
             value={reminder.status}
             onChange={(event) => void updateReminder(reminder.id, { status: event.target.value as ReminderStatus })}
@@ -101,7 +111,7 @@ function ReminderEditor({ reminder }: { readonly reminder: Reminder }) {
           </Select>
         </label>
         <label className="grid gap-2 text-sm font-medium">
-          {t('schedule')}
+          <FieldLabel label={t('schedule')} help={t('scheduleHelp')} />
           <Select value={reminder.schedule.type} onChange={(event) => updateSchedule(scheduleForType(reminder.schedule, event.target.value as ReminderSchedule['type']))}>
             <option value="once">{t('once')}</option>
             <option value="interval">{t('interval')}</option>
@@ -111,7 +121,7 @@ function ReminderEditor({ reminder }: { readonly reminder: Reminder }) {
           </Select>
         </label>
         <label className="grid gap-2 text-sm font-medium">
-          {t('folder')}
+          <FieldLabel label={t('folder')} help={t('folderHelp')} />
           <Select
             value={reminder.folderId ?? 'none'}
             onChange={(event) =>
@@ -133,7 +143,7 @@ function ReminderEditor({ reminder }: { readonly reminder: Reminder }) {
       <div className="mt-4 grid gap-3 md:grid-cols-3">
         {reminder.schedule.type === 'once' ? (
           <label className="grid gap-2 text-sm font-medium">
-            {t('dueAt')}
+            <FieldLabel label={t('dueAt')} help={t('dueAtHelp')} />
             <Input
               type="datetime-local"
               value={toDateTimeInput(reminder.schedule.dueAt)}
@@ -150,7 +160,7 @@ function ReminderEditor({ reminder }: { readonly reminder: Reminder }) {
         {reminder.schedule.type === 'interval' ? (
           <>
             <label className="grid gap-2 text-sm font-medium">
-              {t('dueAt')}
+              <FieldLabel label={t('dueAt')} help={t('dueAtHelp')} />
               <Input
                 type="datetime-local"
                 value={toDateTimeInput(reminder.schedule.startAt)}
@@ -163,7 +173,7 @@ function ReminderEditor({ reminder }: { readonly reminder: Reminder }) {
               />
             </label>
             <label className="grid gap-2 text-sm font-medium">
-              {t('everyMinutes')}
+              <FieldLabel label={t('everyMinutes')} help={t('everyMinutesHelp')} />
               <Input
                 type="number"
                 min={1}
@@ -184,7 +194,7 @@ function ReminderEditor({ reminder }: { readonly reminder: Reminder }) {
 
         {reminder.schedule.type === 'daily' ? (
           <label className="grid gap-2 text-sm font-medium">
-            {t('time')}
+            <FieldLabel label={t('time')} help={t('timeHelp')} />
             <Input
               type="time"
               value={reminder.schedule.time}
@@ -200,7 +210,7 @@ function ReminderEditor({ reminder }: { readonly reminder: Reminder }) {
         {reminder.schedule.type === 'weekly' ? (
           <>
             <label className="grid gap-2 text-sm font-medium">
-              {t('weekday')}
+              <FieldLabel label={t('weekday')} help={t('weekdayHelp')} />
               <Select
                 value={String(reminder.schedule.weekday)}
                 onChange={(event) => {
@@ -221,7 +231,7 @@ function ReminderEditor({ reminder }: { readonly reminder: Reminder }) {
               </Select>
             </label>
             <label className="grid gap-2 text-sm font-medium">
-              {t('time')}
+              <FieldLabel label={t('time')} help={t('timeHelp')} />
               <Input
                 type="time"
                 value={reminder.schedule.time}
@@ -242,7 +252,7 @@ function ReminderEditor({ reminder }: { readonly reminder: Reminder }) {
         {reminder.schedule.type === 'random' ? (
           <>
             <label className="grid gap-2 text-sm font-medium">
-              {t('randomWindow')}
+              <FieldLabel label={t('randomWindowStart')} help={t('randomWindowStartHelp')} />
               <Input
                 type="time"
                 value={reminder.schedule.windowStart}
@@ -259,7 +269,7 @@ function ReminderEditor({ reminder }: { readonly reminder: Reminder }) {
               />
             </label>
             <label className="grid gap-2 text-sm font-medium">
-              {t('time')}
+              <FieldLabel label={t('randomWindowEnd')} help={t('randomWindowEndHelp')} />
               <Input
                 type="time"
                 value={reminder.schedule.windowEnd}
@@ -276,7 +286,7 @@ function ReminderEditor({ reminder }: { readonly reminder: Reminder }) {
               />
             </label>
             <label className="grid gap-2 text-sm font-medium">
-              {t('random')}
+              <FieldLabel label={t('timesPerDay')} help={t('timesPerDayHelp')} />
               <Input
                 type="number"
                 min={1}
@@ -360,7 +370,7 @@ export function RemindersPage() {
           </Button>
         </div>
 
-        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+        <div className="shadcn-scrollbar min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
           {snapshot.reminders.map((reminder) => (
             <button
               key={reminder.id}

@@ -13,12 +13,30 @@ let isQuitting = false
 let repository: SnapshotRepository | null = null
 let scheduler: ReminderScheduler | null = null
 
-const createTrayIcon = (): Electron.NativeImage =>
+const appIconSvg = `
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="bg" x1="18" y1="14" x2="112" y2="116" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffb7df"/>
+      <stop offset="0.52" stop-color="#b983ff"/>
+      <stop offset="1" stop-color="#4ecdc4"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="34" y1="29" x2="91" y2="95" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#fff2fb"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="34" fill="url(#bg)"/>
+  <path fill="url(#paper)" d="M36 25h48c8.8 0 16 7.2 16 16v35c0 8.8-7.2 16-16 16H62.2L38.8 111a4 4 0 0 1-6.5-3.1V41c0-8.8 7.1-16 15.7-16Z"/>
+  <path fill="#7b3ff2" d="M51 48c0-3 2.4-5.5 5.5-5.5h22c3 0 5.5 2.4 5.5 5.5s-2.4 5.5-5.5 5.5h-22A5.5 5.5 0 0 1 51 48Zm0 18c0-3 2.4-5.5 5.5-5.5h29c3 0 5.5 2.4 5.5 5.5s-2.4 5.5-5.5 5.5h-29A5.5 5.5 0 0 1 51 66Zm0 18c0-3 2.4-5.5 5.5-5.5h16c3 0 5.5 2.4 5.5 5.5s-2.4 5.5-5.5 5.5h-16A5.5 5.5 0 0 1 51 84Z"/>
+  <circle cx="93" cy="34" r="13" fill="#fff7fb" opacity="0.9"/>
+  <path fill="#d75caa" d="M91.8 27.5a2.2 2.2 0 0 1 4.4 0v7.2c0 1.2-1 2.2-2.2 2.2h-6.5a2.2 2.2 0 1 1 0-4.4h4.3v-5Z"/>
+</svg>`
+
+const createAppIcon = (): Electron.NativeImage =>
   nativeImage.createFromDataURL(
     'data:image/svg+xml;utf8,' +
-      encodeURIComponent(
-        '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#f7a8d8"/><stop offset="1" stop-color="#8d5cf6"/></linearGradient></defs><rect width="64" height="64" rx="18" fill="url(#g)"/><path fill="white" d="M19 18h26a3 3 0 0 1 3 3v22a3 3 0 0 1-3 3H24l-8 7V21a3 3 0 0 1 3-3Zm7 12h16v-4H26v4Zm0 10h11v-4H26v4Z"/></svg>',
-      ),
+      encodeURIComponent(appIconSvg),
   )
 
 const getRepository = (): SnapshotRepository => {
@@ -36,6 +54,7 @@ const createMainWindow = (): BrowserWindow => {
     minWidth: 980,
     minHeight: 680,
     title: 'Recordatorin',
+    icon: createAppIcon(),
     show: false,
     backgroundColor: '#f8c6e8',
     webPreferences: {
@@ -66,7 +85,7 @@ const createMainWindow = (): BrowserWindow => {
 }
 
 const createTray = (): void => {
-  tray = new Tray(createTrayIcon())
+  tray = new Tray(createAppIcon())
   tray.setToolTip('Recordatorin')
   tray.setContextMenu(
     Menu.buildFromTemplate([
@@ -119,6 +138,8 @@ const registerIpc = (): void => {
     mainWindow?.hide()
   })
 }
+
+app.setAppUserModelId('com.recordatorin.desktop')
 
 app.whenReady().then(() => {
   const repo = getRepository()

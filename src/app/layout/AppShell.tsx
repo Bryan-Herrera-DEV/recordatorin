@@ -34,12 +34,10 @@ export function AppShell() {
 
   return (
     <div className="app-shell">
-      <aside className="app-sidebar glass-panel">
+      <aside className="app-sidebar glass-panel shadcn-scrollbar">
         <div className="rounded-[calc(var(--radius)-4px)] border border-white/35 bg-white/25 p-3">
           <div className="flex items-center gap-3">
-            <div className="grid size-11 place-items-center rounded-2xl bg-[var(--primary)] text-lg font-bold text-[var(--primary-foreground)]">
-              {snapshot.settings.userName.slice(0, 1).toLocaleUpperCase()}
-            </div>
+            <img src="/favicon.svg" alt="Recordatorin" className="size-11 rounded-2xl shadow-lg shadow-black/10" />
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-[var(--foreground)]">
                 {t('welcome', { name: snapshot.settings.userName })}

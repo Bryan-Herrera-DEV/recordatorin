@@ -1,4 +1,5 @@
-import { lazy, Suspense, useDeferredValue, useEffect, useState } from 'react'
+import { Component, lazy, Suspense, useDeferredValue, useEffect, useState } from 'react'
+import type { ReactNode } from 'react'
 import { Search, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { FolderId, TagId } from '@/features/workspace/domain/workspace'
@@ -22,6 +23,31 @@ const CanvasEditor = lazy(async () => {
 })
 
 type EditorTab = 'markdown' | 'canvas'
+
+type EditorErrorBoundaryProps = {
+  readonly children: ReactNode
+  readonly fallback: ReactNode
+}
+
+type EditorErrorBoundaryState = {
+  readonly hasError: boolean
+}
+
+class EditorErrorBoundary extends Component<EditorErrorBoundaryProps, EditorErrorBoundaryState> {
+  override state: EditorErrorBoundaryState = { hasError: false }
+
+  static getDerivedStateFromError(): EditorErrorBoundaryState {
+    return { hasError: true }
+  }
+
+  override componentDidCatch(error: unknown): void {
+    console.error('Editor failed to render', error)
+  }
+
+  override render() {
+    return this.state.hasError ? this.props.fallback : this.props.children
+  }
+}
 
 const formatDate = (value: string, locale: string): string =>
   new Intl.DateTimeFormat(locale, {
@@ -122,7 +148,7 @@ export function NotesPage() {
           <Input type="date" value={filters.dateTo} onChange={(event) => setFilters({ dateTo: event.target.value })} />
         </div>
 
-        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+        <div className="shadcn-scrollbar min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
           {filteredNotes.map((note) => (
             <button
               key={note.id}
@@ -209,21 +235,26 @@ export function NotesPage() {
               </div>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto p-5">
-              <Suspense fallback={<div className="grid h-64 place-items-center opacity-70">{t('loading')}</div>}>
-                {tab === 'markdown' ? (
-                  <MarkdownEditor
-                    value={selectedNote.contentMarkdown}
-                    onChange={(contentMarkdown) => void updateNote(selectedNote.id, { contentMarkdown })}
-                  />
-                ) : (
-                  <CanvasEditor
-                    noteId={selectedNote.id}
-                    scene={selectedNote.excalidraw}
-                    onChange={(excalidraw) => void updateNote(selectedNote.id, { excalidraw })}
-                  />
-                )}
-              </Suspense>
+            <div className="shadcn-scrollbar min-h-0 flex-1 overflow-y-auto p-5">
+              <EditorErrorBoundary
+                key={`${selectedNote.id}-${tab}`}
+                fallback={<EmptyState title={t('canvas')} description={t('canvasError')} />}
+              >
+                <Suspense fallback={<div className="grid h-64 place-items-center opacity-70">{t('loading')}</div>}>
+                  {tab === 'markdown' ? (
+                    <MarkdownEditor
+                      value={selectedNote.contentMarkdown}
+                      onChange={(contentMarkdown) => void updateNote(selectedNote.id, { contentMarkdown })}
+                    />
+                  ) : (
+                    <CanvasEditor
+                      noteId={selectedNote.id}
+                      scene={selectedNote.excalidraw}
+                      onChange={(excalidraw) => void updateNote(selectedNote.id, { excalidraw })}
+                    />
+                  )}
+                </Suspense>
+              </EditorErrorBoundary>
             </div>
           </div>
         </Card>

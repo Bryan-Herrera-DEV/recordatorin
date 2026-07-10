@@ -1,4 +1,4 @@
-import type { SoundSettings } from '@/features/settings/domain/settings'
+import type { SoundPack, SoundSettings } from '@/features/settings/domain/settings'
 import { clamp } from '@/shared/domain/primitives'
 
 type Tone = {
@@ -8,10 +8,9 @@ type Tone = {
   readonly type: OscillatorType
 }
 
-const soundPacks: Record<SoundSettings['pack'], readonly Tone[]> = {
+const soundPacks: Record<SoundPack, readonly Tone[]> = {
   soft: [
     { frequency: 540, duration: 0.08, delay: 0, type: 'sine' },
-    { frequency: 780, duration: 0.16, delay: 0.05, type: 'sine' },
   ],
   glass: [
     { frequency: 880, duration: 0.07, delay: 0, type: 'triangle' },
@@ -19,7 +18,32 @@ const soundPacks: Record<SoundSettings['pack'], readonly Tone[]> = {
     { frequency: 1760, duration: 0.08, delay: 0.09, type: 'sine' },
   ],
   muted: [{ frequency: 340, duration: 0.07, delay: 0, type: 'sine' }],
+  aurora: [
+    { frequency: 392, duration: 0.1, delay: 0, type: 'sine' },
+    { frequency: 587, duration: 0.16, delay: 0.06, type: 'triangle' },
+    { frequency: 784, duration: 0.2, delay: 0.13, type: 'sine' },
+  ],
+  bell: [
+    { frequency: 988, duration: 0.08, delay: 0, type: 'sine' },
+    { frequency: 1480, duration: 0.18, delay: 0.04, type: 'triangle' },
+  ],
+  pulse: [
+    { frequency: 440, duration: 0.06, delay: 0, type: 'square' },
+    { frequency: 440, duration: 0.06, delay: 0.11, type: 'square' },
+    { frequency: 660, duration: 0.09, delay: 0.22, type: 'triangle' },
+  ],
+  wood: [
+    { frequency: 260, duration: 0.05, delay: 0, type: 'triangle' },
+    { frequency: 330, duration: 0.05, delay: 0.08, type: 'triangle' },
+  ],
 }
+
+const uiTonesForPack = (pack: SoundPack): readonly Tone[] =>
+  soundPacks[pack].slice(0, 2).map((tone) => ({
+    ...tone,
+    duration: Math.min(tone.duration, 0.045),
+    delay: tone.delay * 0.45,
+  }))
 
 const createAudioContext = (): AudioContext | null => {
   const AudioContextConstructor = window.AudioContext ?? window.webkitAudioContext
@@ -62,7 +86,7 @@ export const playUiSound = (settings: SoundSettings): void => {
     return
   }
 
-  playTones([{ frequency: 620, duration: 0.035, delay: 0, type: 'sine' }], settings.uiVolume)
+  playTones(uiTonesForPack(settings.uiPack), settings.uiVolume)
 }
 
 export const playAlertSound = (settings: SoundSettings): void => {
@@ -77,7 +101,7 @@ export const playAlertSound = (settings: SoundSettings): void => {
     return
   }
 
-  playTones(soundPacks[settings.pack], settings.alertVolume)
+  playTones(soundPacks[settings.alertPack], settings.alertVolume)
 }
 
 declare global {

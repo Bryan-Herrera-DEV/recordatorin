@@ -2,7 +2,7 @@ import { createNote } from '@/features/notes/domain/note'
 import type { Note } from '@/features/notes/domain/note'
 import { createReminder } from '@/features/reminders/domain/reminder'
 import type { Reminder } from '@/features/reminders/domain/reminder'
-import { createDefaultSettings } from '@/features/settings/domain/settings'
+import { createDefaultSettings, ensureAppSettings } from '@/features/settings/domain/settings'
 import type { AppSettings, Locale } from '@/features/settings/domain/settings'
 import { createFolder, createTag } from '@/features/workspace/domain/workspace'
 import type { Folder, Tag } from '@/features/workspace/domain/workspace'
@@ -90,5 +90,13 @@ export const isAppSnapshot = (value: unknown): value is AppSnapshot => {
   )
 }
 
-export const ensureSnapshot = (snapshot: AppSnapshot | null, locale: Locale = 'es'): AppSnapshot =>
-  snapshot ?? createInitialSnapshot(locale)
+export const ensureSnapshot = (snapshot: AppSnapshot | null, locale: Locale = 'es'): AppSnapshot => {
+  if (snapshot === null) {
+    return createInitialSnapshot(locale)
+  }
+
+  return {
+    ...snapshot,
+    settings: ensureAppSettings(snapshot.settings, locale),
+  }
+}
