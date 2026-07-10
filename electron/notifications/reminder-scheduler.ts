@@ -1,3 +1,4 @@
+import { randomInt } from 'node:crypto'
 import { BrowserWindow, Notification } from 'electron'
 import type { Reminder, ReminderSchedule } from '@/features/reminders/domain/reminder'
 import { isRecurringSchedule } from '@/features/reminders/domain/reminder'
@@ -73,7 +74,7 @@ const randomDateInWindow = (now: Date, windowStart: string, windowEnd: string): 
 
   const floor = Math.max(start.getTime(), now.getTime() + 60_000)
   const span = Math.max(end.getTime() - floor, 60_000)
-  return new Date(floor + Math.random() * span)
+  return new Date(floor + randomInt(span))
 }
 
 const computeNextTrigger = (reminder: Reminder, now: Date): Date | null => {
