@@ -1,7 +1,7 @@
 import type { InputHTMLAttributes } from 'react'
 import { cn } from '@/shared/lib/cn'
 
-export type InputProps = InputHTMLAttributes<HTMLInputElement>
+export type InputProps = Readonly<InputHTMLAttributes<HTMLInputElement>>
 
 export function Input({ className, ...props }: InputProps) {
   return (
