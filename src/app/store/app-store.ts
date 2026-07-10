@@ -36,7 +36,7 @@ type AppStore = {
   readonly setSelectedNoteId: (id: NoteId | null) => void
   readonly setSelectedReminderId: (id: ReminderId | null) => void
   readonly setNoteFilters: (filters: Partial<NoteFilters>) => void
-  readonly addFolder: (name: string) => Promise<void>
+  readonly addFolder: (name: string, color?: string) => Promise<void>
   readonly addTag: (label: string) => Promise<void>
   readonly createNote: () => Promise<void>
   readonly updateNote: (id: NoteId, patch: NotePatch) => Promise<void>
@@ -144,11 +144,11 @@ export const useAppStore = create<AppStore>((set, get) => ({
       },
     })
   },
-  addFolder: async (name: string) => {
+  addFolder: async (name: string, color?: string) => {
     const snapshot = get().snapshot
     const nextSnapshot = touchSnapshot({
       ...snapshot,
-      folders: [...snapshot.folders, createFolder(name)],
+      folders: [...snapshot.folders, createFolder(name, color)],
     })
     set({ snapshot: nextSnapshot })
     await persistSnapshot(nextSnapshot)

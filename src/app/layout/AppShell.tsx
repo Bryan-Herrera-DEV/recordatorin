@@ -1,9 +1,14 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { Bell, Folder, Hash, MoonStar, NotebookPen, Plus, Settings } from 'lucide-react'
+import { useState } from 'react'
+import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
+import { createFolderColorPalette } from '@/features/workspace/domain/folder-colors'
+import { FolderColorPicker } from '@/features/workspace/components/FolderColorPicker'
 import { useAppStore } from '@/app/store/app-store'
 import { Button } from '@/shared/ui/button'
 import { Badge } from '@/shared/ui/badge'
+import { Input } from '@/shared/ui/input'
 import { cn } from '@/shared/lib/cn'
 
 const navLinkClass = ({ isActive }: { readonly isActive: boolean }): string =>
@@ -17,11 +22,18 @@ export function AppShell() {
   const snapshot = useAppStore((state) => state.snapshot)
   const addFolder = useAppStore((state) => state.addFolder)
   const addTag = useAppStore((state) => state.addTag)
+  const folderColorPalette = createFolderColorPalette(snapshot.settings.theme.colors)
+  const [addingFolder, setAddingFolder] = useState(false)
+  const [folderName, setFolderName] = useState('')
+  const [folderColor, setFolderColor] = useState(folderColorPalette[0] ?? '#f7a8d8')
 
-  const handleAddFolder = (): void => {
-    const name = window.prompt(t('folderPrompt'))
-    if (name !== null && name.trim().length > 0) {
-      void addFolder(name)
+  const handleAddFolder = (event: FormEvent<HTMLFormElement>): void => {
+    event.preventDefault()
+    if (folderName.trim().length > 0) {
+      void addFolder(folderName, folderColor).then(() => {
+        setFolderName('')
+        setAddingFolder(false)
+      })
     }
   }
 
@@ -62,10 +74,29 @@ export function AppShell() {
         <section className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="sidebar-heading">{t('folders')}</h2>
-            <Button type="button" variant="ghost" size="icon" onClick={handleAddFolder} aria-label={t('newFolder')}>
+            <Button type="button" variant="ghost" size="icon" onClick={() => setAddingFolder((current) => !current)} aria-label={t('newFolder')}>
               <Plus className="size-4" />
             </Button>
           </div>
+          {addingFolder ? (
+            <form className="grid gap-2 rounded-2xl border border-white/30 bg-white/15 p-2" onSubmit={handleAddFolder}>
+              <Input placeholder={t('folderPrompt')} value={folderName} onChange={(event) => setFolderName(event.target.value)} autoFocus />
+              <FolderColorPicker
+                colors={snapshot.settings.theme.colors}
+                label={t('folderColor')}
+                value={folderColor}
+                onChange={setFolderColor}
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <Button type="submit" size="sm" variant="secondary">
+                  {t('add')}
+                </Button>
+                <Button type="button" size="sm" variant="ghost" onClick={() => setAddingFolder(false)}>
+                  {t('cancel')}
+                </Button>
+              </div>
+            </form>
+          ) : null}
           <div className="space-y-1">
             {snapshot.folders.map((folder) => (
               <div key={folder.id} className="flex items-center gap-2 rounded-2xl px-2 py-1.5 text-sm">

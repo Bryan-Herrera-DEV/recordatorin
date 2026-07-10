@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Locale, SoundPack, ThemeColors, ThemeConfig, ThemeDensity } from '@/features/settings/domain/settings'
 import { themePresets, updateThemeTimestamp } from '@/features/settings/domain/settings'
+import { createFolderColorPalette } from '@/features/workspace/domain/folder-colors'
+import { FolderColorPicker } from '@/features/workspace/components/FolderColorPicker'
 import { useAppStore } from '@/app/store/app-store'
 import { playAlertSound, playUiSound } from '@/platform/sound/sound-player'
 import { Button } from '@/shared/ui/button'
@@ -49,11 +51,12 @@ export function SettingsPage() {
   const updateTheme = useAppStore((state) => state.updateTheme)
   const addFolder = useAppStore((state) => state.addFolder)
   const addTag = useAppStore((state) => state.addTag)
+  const theme = snapshot.settings.theme
+  const folderColorPalette = createFolderColorPalette(theme.colors)
   const [folderName, setFolderName] = useState('')
+  const [folderColor, setFolderColor] = useState(folderColorPalette[0] ?? '#f7a8d8')
   const [tagName, setTagName] = useState('')
   const [themeName, setThemeName] = useState('')
-
-  const theme = snapshot.settings.theme
 
   const patchTheme = (patch: Partial<ThemeConfig>): void => {
     void updateTheme({
@@ -352,7 +355,7 @@ export function SettingsPage() {
           onSubmit={(event) => {
             event.preventDefault()
             if (folderName.trim().length > 0) {
-              void addFolder(folderName).then(() => setFolderName(''))
+              void addFolder(folderName, folderColor).then(() => setFolderName(''))
             }
           }}
         >
@@ -360,6 +363,7 @@ export function SettingsPage() {
             {t('newFolder')}
             <Input value={folderName} onChange={(event) => setFolderName(event.target.value)} />
           </label>
+          <FolderColorPicker colors={theme.colors} label={t('folderColor')} value={folderColor} onChange={setFolderColor} />
           <Button type="submit" variant="secondary">{t('add')}</Button>
         </form>
         <ScrollArea className="max-h-56 space-y-2 pr-1">
