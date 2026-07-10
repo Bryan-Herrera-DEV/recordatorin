@@ -1,7 +1,7 @@
 import type { TextareaHTMLAttributes } from 'react'
 import { cn } from '@/shared/lib/cn'
 
-export type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement>
+export type TextareaProps = Readonly<TextareaHTMLAttributes<HTMLTextAreaElement>>
 
 export function Textarea({ className, ...props }: TextareaProps) {
   return (
