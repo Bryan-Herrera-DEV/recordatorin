@@ -158,10 +158,7 @@ app.on('before-quit', () => {
 app.on('window-all-closed', () => undefined)
 
 app.on('activate', () => {
-  if (mainWindow === null) {
-    mainWindow = createMainWindow()
-  }
-
+  mainWindow ??= createMainWindow()
   mainWindow.show()
 })
 
