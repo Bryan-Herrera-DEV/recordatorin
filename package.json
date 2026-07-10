@@ -7,6 +7,7 @@
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
+    "postinstall": "electron-builder install-app-deps",
     "prebuild": "node scripts/generate-icons.mjs",
     "build": "tsc -b && electron-vite build",
     "dist": "npm run build && electron-builder",

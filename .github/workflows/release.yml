@@ -6,6 +6,7 @@ on:
       bump:
         description: Version bump to release
         required: true
+        default: patch
         type: choice
         options:
           - patch
@@ -110,6 +111,15 @@ jobs:
           CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
 
+      - name: Verify Windows native dependency
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          $binding = 'release/win-unpacked/resources/app.asar.unpacked/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+          if (-not (Test-Path -LiteralPath $binding)) {
+            throw "Missing better-sqlite3 native binding: $binding"
+          }
+
       - name: Upload ${{ matrix.platform }} artifact
         uses: actions/upload-artifact@v4
         with:
@@ -186,6 +196,15 @@ jobs:
         env:
           CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
+
+      - name: Verify Windows native dependency
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          $binding = 'release/win-unpacked/resources/app.asar.unpacked/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+          if (-not (Test-Path -LiteralPath $binding)) {
+            throw "Missing better-sqlite3 native binding: $binding"
+          }
 
       - name: Upload ${{ matrix.platform }} artifact
         uses: actions/upload-artifact@v4

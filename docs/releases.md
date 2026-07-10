@@ -27,8 +27,10 @@ El workflow hace automaticamente:
 - Actualiza la version en `package.json` y `package-lock.json`.
 - Crea un commit `chore(release): vX.Y.Z`.
 - Crea el tag `vX.Y.Z`.
-- Compila Windows y Linux.
+- Compila Windows en `windows-latest` y Linux en `ubuntu-latest`.
 - Sube el `.exe` de Windows y el `.AppImage` de Linux a GitHub Releases.
+
+El build de Windows debe correr en `windows-latest` porque la app usa `better-sqlite3`, una dependencia nativa. Si el `.exe` se genera desde Linux, el instalador puede terminar correctamente pero la app puede cerrarse al arrancar.
 
 ## Ejemplos De Subida
 
