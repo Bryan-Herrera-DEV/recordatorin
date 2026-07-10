@@ -2,7 +2,7 @@ import { ChevronDown } from 'lucide-react'
 import type { SelectHTMLAttributes } from 'react'
 import { cn } from '@/shared/lib/cn'
 
-export type SelectProps = SelectHTMLAttributes<HTMLSelectElement>
+export type SelectProps = Readonly<SelectHTMLAttributes<HTMLSelectElement>>
 
 export function Select({ className, children, ...props }: SelectProps) {
   return (
