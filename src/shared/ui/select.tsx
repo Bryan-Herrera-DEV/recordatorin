@@ -1,0 +1,18 @@
+import type { SelectHTMLAttributes } from 'react'
+import { cn } from '@/shared/lib/cn'
+
+export type SelectProps = SelectHTMLAttributes<HTMLSelectElement>
+
+export function Select({ className, children, ...props }: SelectProps) {
+  return (
+    <select
+      className={cn(
+        'h-10 w-full rounded-[calc(var(--radius)-8px)] border border-[var(--border)] bg-white/45 px-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--ring)] focus:ring-2 focus:ring-[var(--ring)]/30',
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </select>
+  )
+}
