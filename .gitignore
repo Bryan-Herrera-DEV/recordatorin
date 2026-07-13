@@ -30,3 +30,5 @@ sonar-issues*.md
 *.njsproj
 *.sln
 *.sw?
+release-dir/
+release-local*/

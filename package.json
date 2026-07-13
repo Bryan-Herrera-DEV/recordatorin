@@ -11,7 +11,7 @@
     "prebuild": "node scripts/generate-icons.mjs",
     "build": "tsc -b && electron-vite build",
     "dist": "npm run build && electron-builder",
-    "dist:win": "npm run build && electron-builder --win --publish never",
+    "dist:win": "node scripts/dist-win.mjs",
     "dist:linux": "npm run build && electron-builder --linux --publish never",
     "lint": "oxlint .",
     "preview": "electron-vite preview",

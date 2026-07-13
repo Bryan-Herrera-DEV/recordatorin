@@ -114,4 +114,4 @@ npm run dist:linux
 
 Los artefactos quedan en `release/`.
 
-Si Windows bloquea `release/win-unpacked` con `EPERM`, cierra cualquier `Recordatorin.exe` abierto, cierra exploradores apuntando a `release/` y elimina la carpeta `release/` antes de repetir.
+Si Windows bloquea `release/win-unpacked` con `EPERM` o `EBUSY`, cierra cualquier `Recordatorin.exe` abierto, cierra exploradores apuntando a `release/` y elimina la carpeta `release/` antes de repetir. Si `npm run dist:win` detecta `app.asar` bloqueado, reintenta automaticamente en `release-local-*/` para que el build local no falle por un artefacto viejo.
