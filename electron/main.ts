@@ -13,6 +13,9 @@ let isQuitting = false
 let repository: SnapshotRepository | null = null
 let scheduler: ReminderScheduler | null = null
 
+const appDisplayName = 'Recordatorin'
+const appUserModelId = 'com.recordatorin.desktop'
+
 const getBuildAssetPath = (fileName: string): string => join(__dirname, '../../build', fileName)
 
 const createWindowIcon = (): Electron.NativeImage =>
@@ -108,7 +111,7 @@ const registerIpc = (): void => {
     }
   })
   ipcMain.handle('notifications:test', (_event, payload: TestNotificationPayload) => {
-    new Notification({ title: payload.title, body: payload.body }).show()
+    new Notification({ title: payload.title, body: payload.body, icon: getBuildAssetPath('icon.png') }).show()
   })
   ipcMain.handle('app:set-launch-at-login', (_event, enabled: boolean) => {
     app.setLoginItemSettings({ openAtLogin: enabled })
@@ -118,7 +121,8 @@ const registerIpc = (): void => {
   })
 }
 
-app.setAppUserModelId('com.recordatorin.desktop')
+app.setAppUserModelId(appUserModelId)
+app.setName(appDisplayName)
 
 const initializeApp = (): void => {
   const repo = getRepository()

@@ -1,4 +1,5 @@
 import { randomInt } from 'node:crypto'
+import { join } from 'node:path'
 import { BrowserWindow, Notification } from 'electron'
 import type { Reminder, ReminderSchedule } from '@/features/reminders/domain/reminder'
 import { isRecurringSchedule } from '@/features/reminders/domain/reminder'
@@ -11,6 +12,8 @@ import type { SnapshotRepository } from '../storage/sqlite-repository'
 type TimerHandle = ReturnType<typeof setTimeout>
 
 const maxTimeoutDelay = 2_147_000_000
+
+const notificationIconPath = join(__dirname, '../../build/icon.png')
 
 const stripMarkdown = (value: string): string =>
   value
@@ -171,7 +174,7 @@ export class ReminderScheduler {
     this.#timers.set(reminder.id, timer)
   }
 
-  #trigger(reminderId: string): void {
+  #trigger(reminderId: Reminder['id']): void {
     this.#timers.delete(reminderId)
 
     const snapshot = this.#repository.load()
@@ -185,11 +188,12 @@ export class ReminderScheduler {
     }
 
     const body = stripMarkdown(reminder.descriptionMarkdown) || describeSchedule(reminder.schedule)
-    new Notification({
+    const notification = new Notification({
       title: reminder.title,
       body,
+      icon: notificationIconPath,
       silent: this.#sounds?.enabled === false,
-    }).show()
+    })
 
     const nextReminder: Reminder = {
       ...reminder,
@@ -204,6 +208,8 @@ export class ReminderScheduler {
     })
 
     this.#repository.save(nextSnapshot)
+    notification.on('click', () => this.#openReminder(reminder.id, nextSnapshot))
+    notification.show()
     this.#getWindow()?.webContents.send('reminders:triggered', {
       reminderId: reminder.id,
       snapshot: nextSnapshot,
@@ -216,5 +222,23 @@ export class ReminderScheduler {
         lastTriggeredAt: toIsoDate(new Date()),
       })
     }
+  }
+
+  #openReminder(reminderId: Reminder['id'], snapshot: AppSnapshot): void {
+    const window = this.#getWindow()
+    if (window === null) {
+      return
+    }
+
+    if (window.isMinimized()) {
+      window.restore()
+    }
+
+    window.show()
+    window.focus()
+    window.webContents.send('reminders:notification-clicked', {
+      reminderId,
+      snapshot,
+    })
   }
 }

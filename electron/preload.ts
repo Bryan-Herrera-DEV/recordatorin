@@ -23,6 +23,11 @@ const api: RecordatorinApi = {
     ipcRenderer.on('reminders:triggered', listener)
     return () => ipcRenderer.removeListener('reminders:triggered', listener)
   },
+  onReminderNotificationClicked: (callback: (payload: ReminderTriggeredPayload) => void) => {
+    const listener = (_event: IpcRendererEvent, payload: ReminderTriggeredPayload): void => callback(payload)
+    ipcRenderer.on('reminders:notification-clicked', listener)
+    return () => ipcRenderer.removeListener('reminders:notification-clicked', listener)
+  },
   onSnapshotUpdated: (callback: (snapshot: AppSnapshot) => void) => {
     const listener = (_event: IpcRendererEvent, snapshot: AppSnapshot): void => callback(snapshot)
     ipcRenderer.on('app:snapshot-updated', listener)

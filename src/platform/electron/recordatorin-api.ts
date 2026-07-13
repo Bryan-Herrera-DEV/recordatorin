@@ -1,9 +1,9 @@
-import type { Reminder } from '@/features/reminders/domain/reminder'
+import type { Reminder, ReminderId } from '@/features/reminders/domain/reminder'
 import type { SoundSettings } from '@/features/settings/domain/settings'
 import type { AppSnapshot } from '@/shared/domain/snapshot'
 
 export type ReminderTriggeredPayload = {
-  readonly reminderId: string
+  readonly reminderId: ReminderId
   readonly snapshot: AppSnapshot
 }
 
@@ -23,6 +23,7 @@ export type RecordatorinApi = {
   readonly setLaunchAtLogin: (enabled: boolean) => Promise<void>
   readonly minimizeToTray: () => Promise<void>
   readonly onReminderTriggered: (callback: (payload: ReminderTriggeredPayload) => void) => () => void
+  readonly onReminderNotificationClicked: (callback: (payload: ReminderTriggeredPayload) => void) => () => void
   readonly onSnapshotUpdated: (callback: (snapshot: AppSnapshot) => void) => () => void
 }
 

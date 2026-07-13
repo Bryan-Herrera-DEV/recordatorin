@@ -28,12 +28,18 @@ export function AppBootstrap({ children }: AppBootstrapProps) {
       applyExternalSnapshot(payload.snapshot)
       playAlertSound(useAppStore.getState().snapshot.settings.sounds)
     })
+    const removeNotificationClickListener = window.recordatorin?.onReminderNotificationClicked((payload) => {
+      applyExternalSnapshot(payload.snapshot)
+      useAppStore.getState().setSelectedReminderId(payload.reminderId)
+      window.location.hash = '/reminders'
+    })
     const removeSnapshotListener = window.recordatorin?.onSnapshotUpdated((nextSnapshot) => {
       applyExternalSnapshot(nextSnapshot)
     })
 
     return () => {
       removeReminderListener?.()
+      removeNotificationClickListener?.()
       removeSnapshotListener?.()
     }
   }, [applyExternalSnapshot])
