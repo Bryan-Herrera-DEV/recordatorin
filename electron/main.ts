@@ -1,5 +1,5 @@
 import { join } from 'node:path'
-import { app, BrowserWindow, Menu, nativeImage, Notification, Tray, ipcMain } from 'electron'
+import { app, BrowserWindow, Menu, nativeImage, Notification, Tray, ipcMain, shell } from 'electron'
 import type { Reminder } from '@/features/reminders/domain/reminder'
 import type { SoundSettings } from '@/features/settings/domain/settings'
 import type { TestNotificationPayload } from '@/platform/electron/recordatorin-api'
@@ -15,6 +15,7 @@ let scheduler: ReminderScheduler | null = null
 
 const appDisplayName = 'Recordatorin'
 const appUserModelId = 'com.recordatorin.desktop'
+const toastActivatorClsid = '9f75e8c0-42f4-47e7-9a48-ff66f61d9f08'
 
 const getBuildAssetPath = (fileName: string): string => join(__dirname, '../../build', fileName)
 
@@ -23,6 +24,43 @@ const createWindowIcon = (): Electron.NativeImage =>
 
 const createTrayIcon = (): Electron.NativeImage =>
   nativeImage.createFromPath(getBuildAssetPath('icon.png')).resize({ width: 16, height: 16 })
+
+const showMainWindow = (): void => {
+  if (mainWindow === null) {
+    return
+  }
+
+  if (mainWindow.isMinimized()) {
+    mainWindow.restore()
+  }
+
+  mainWindow.show()
+  mainWindow.focus()
+}
+
+const ensureDevelopmentWindowsShortcut = (): void => {
+  if (process.platform !== 'win32' || app.isPackaged) {
+    return
+  }
+
+  const shortcutPath = join(
+    app.getPath('appData'),
+    'Microsoft',
+    'Windows',
+    'Start Menu',
+    'Programs',
+    `${appDisplayName}.lnk`,
+  )
+
+  shell.writeShortcutLink(shortcutPath, 'create', {
+    target: process.execPath,
+    args: `"${app.getAppPath()}"`,
+    appUserModelId,
+    description: 'Recordatorin development app',
+    icon: getBuildAssetPath('icon.ico'),
+    iconIndex: 0,
+  })
+}
 
 const getRepository = (): SnapshotRepository => {
   repository ??= new SnapshotRepository(join(app.getPath('userData'), 'recordatorin.sqlite'))
@@ -74,8 +112,7 @@ const createTray = (): void => {
       {
         label: 'Open Recordatorin',
         click: () => {
-          mainWindow?.show()
-          mainWindow?.focus()
+          showMainWindow()
         },
       },
       {
@@ -88,8 +125,7 @@ const createTray = (): void => {
     ]),
   )
   tray.on('double-click', () => {
-    mainWindow?.show()
-    mainWindow?.focus()
+    showMainWindow()
   })
 }
 
@@ -111,7 +147,9 @@ const registerIpc = (): void => {
     }
   })
   ipcMain.handle('notifications:test', (_event, payload: TestNotificationPayload) => {
-    new Notification({ title: payload.title, body: payload.body, icon: getBuildAssetPath('icon.png') }).show()
+    const notification = new Notification({ title: payload.title, body: payload.body, icon: getBuildAssetPath('icon.png') })
+    notification.on('click', showMainWindow)
+    notification.show()
   })
   ipcMain.handle('app:set-launch-at-login', (_event, enabled: boolean) => {
     app.setLoginItemSettings({ openAtLogin: enabled })
@@ -121,10 +159,23 @@ const registerIpc = (): void => {
   })
 }
 
-app.setAppUserModelId(appUserModelId)
 app.setName(appDisplayName)
+app.setAppUserModelId(appUserModelId)
+
+if (process.platform === 'win32') {
+  app.setToastActivatorCLSID(toastActivatorClsid)
+}
+
+const gotSingleInstanceLock = app.requestSingleInstanceLock()
+
+if (!gotSingleInstanceLock) {
+  app.quit()
+}
+
+app.on('second-instance', showMainWindow)
 
 const initializeApp = (): void => {
+  ensureDevelopmentWindowsShortcut()
   const repo = getRepository()
   Menu.setApplicationMenu(null)
   mainWindow = createMainWindow()
@@ -148,7 +199,7 @@ app.on('window-all-closed', () => undefined)
 
 app.on('activate', () => {
   mainWindow ??= createMainWindow()
-  mainWindow.show()
+  showMainWindow()
 })
 
 app.on('quit', () => {
