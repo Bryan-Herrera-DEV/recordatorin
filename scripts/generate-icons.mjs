@@ -161,24 +161,35 @@ const createPng = (size) => {
   ])
 }
 
-const createIco = (png) => {
-  const header = Buffer.alloc(22)
+const createIco = (images) => {
+  const headerSize = 6 + images.length * 16
+  const header = Buffer.alloc(headerSize)
   header.writeUInt16LE(0, 0)
   header.writeUInt16LE(1, 2)
-  header.writeUInt16LE(1, 4)
-  header[6] = 0
-  header[7] = 0
-  header[8] = 0
-  header[9] = 0
-  header.writeUInt16LE(1, 10)
-  header.writeUInt16LE(32, 12)
-  header.writeUInt32LE(png.length, 14)
-  header.writeUInt32LE(22, 18)
-  return Buffer.concat([header, png])
+  header.writeUInt16LE(images.length, 4)
+
+  let offset = headerSize
+  images.forEach(({ size, png }, index) => {
+    const entryOffset = 6 + index * 16
+    header[entryOffset] = size === 256 ? 0 : size
+    header[entryOffset + 1] = size === 256 ? 0 : size
+    header[entryOffset + 2] = 0
+    header[entryOffset + 3] = 0
+    header.writeUInt16LE(1, entryOffset + 4)
+    header.writeUInt16LE(32, entryOffset + 6)
+    header.writeUInt32LE(png.length, entryOffset + 8)
+    header.writeUInt32LE(offset, entryOffset + 12)
+    offset += png.length
+  })
+
+  return Buffer.concat([header, ...images.map(({ png }) => png)])
 }
 
 mkdirSync(buildDir, { recursive: true })
 writeFileSync(join(buildDir, 'icon.png'), createPng(512))
-writeFileSync(join(buildDir, 'icon.ico'), createIco(createPng(256)))
+writeFileSync(
+  join(buildDir, 'icon.ico'),
+  createIco([16, 24, 32, 48, 64, 128, 256].map((size) => ({ size, png: createPng(size) }))),
+)
 
 console.log('Generated build/icon.png and build/icon.ico')

@@ -6,6 +6,7 @@
   "type": "module",
   "main": "./out/main/index.js",
   "scripts": {
+    "predev": "node scripts/generate-icons.mjs",
     "dev": "electron-vite dev",
     "postinstall": "electron-builder install-app-deps",
     "prebuild": "node scripts/generate-icons.mjs",
@@ -76,6 +77,8 @@
     "icon": "build/icon",
     "artifactName": "Recordatorin-${version}-${os}-${arch}.${ext}",
     "files": [
+      "build/icon.ico",
+      "build/icon.png",
       "out/**/*",
       "package.json"
     ],

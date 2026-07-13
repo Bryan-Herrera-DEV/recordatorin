@@ -28,6 +28,7 @@ export function AppShell() {
   const [addingFolder, setAddingFolder] = useState(false)
   const [folderName, setFolderName] = useState('')
   const [folderColor, setFolderColor] = useState(folderColorPalette[0] ?? '#f7a8d8')
+  const userInitial = (snapshot.settings.userName.trim().charAt(0) || 'R').toLocaleUpperCase()
 
   const handleAddFolder = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault()
@@ -59,7 +60,9 @@ export function AppShell() {
       <aside className="app-sidebar glass-panel shadcn-scrollbar">
         <div className="rounded-[calc(var(--radius)-4px)] border border-white/35 bg-white/25 p-3">
           <div className="flex items-center gap-3">
-            <img src="/favicon.svg" alt="Recordatorin" className="size-11 rounded-2xl shadow-lg shadow-black/10" />
+            <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-[var(--primary)] text-lg font-bold text-[var(--primary-foreground)] shadow-lg shadow-black/10" aria-label={snapshot.settings.userName}>
+              {userInitial}
+            </div>
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-[var(--foreground)]">
                 {t('welcome', { name: snapshot.settings.userName })}
